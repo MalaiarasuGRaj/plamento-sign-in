@@ -4,14 +4,25 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 
-const LoginPage = () => {
+interface LoginPageProps {
+  onLogin: (email: string, password: string) => Promise<boolean>;
+  onSignup: () => void;
+}
+
+const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password });
+    setIsLoading(true);
+    
+    const success = await onLogin(email, password);
+    if (!success) {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -170,8 +181,9 @@ const LoginPage = () => {
               type="submit"
               variant="login"
               className="w-full h-12 mt-6"
+              disabled={isLoading}
             >
-              Login →
+              {isLoading ? "Signing in..." : "Login →"}
             </Button>
           </form>
 
@@ -179,7 +191,10 @@ const LoginPage = () => {
           <div className="text-center pt-4">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <button className="text-primary hover:text-primary/80 font-medium">
+              <button 
+                onClick={onSignup}
+                className="text-primary hover:text-primary/80 font-medium"
+              >
                 Sign up
               </button>
             </p>
