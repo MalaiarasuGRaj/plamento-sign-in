@@ -155,7 +155,7 @@ const LoginPage = () => {
       {/* Footer */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span>© 2024 Plamento</span>
+          <span>© 2025 Plamento</span>
           <span>|</span>
           <button className="hover:text-foreground">Support</button>
           <span>|</span>
