@@ -16,7 +16,8 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phoneNumber: "",
     dateOfBirth: "",
@@ -58,7 +59,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            full_name: formData.fullName,
+            full_name: `${formData.firstName} ${formData.lastName}`,
             phone_number: formData.phoneNumber,
             date_of_birth: formData.dateOfBirth
           }
@@ -90,7 +91,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="h-screen bg-background flex flex-col justify-between p-4">
       {/* Logo in top left */}
       <div className="absolute top-6 left-6">
         <div className="flex items-center gap-2">
@@ -102,7 +103,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
       </div>
 
       {/* Main signup card */}
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
         <CardHeader className="text-center pb-4">
           <div className="flex items-center mb-4">
             <Button
@@ -129,19 +130,35 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
 
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-card-foreground">
-                Full Name <span className="text-destructive">*</span>
-              </label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChange={(e) => handleInputChange("fullName", e.target.value)}
-                className="h-12"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="firstName" className="text-sm font-medium text-card-foreground">
+                  First Name <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="First name"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  className="h-12"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="lastName" className="text-sm font-medium text-card-foreground">
+                  Last Name <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Last name"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  className="h-12"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -159,31 +176,32 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="phoneNumber" className="text-sm font-medium text-card-foreground">
-                Phone Number
-              </label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="Enter your phone number"
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                className="h-12"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="dateOfBirth" className="text-sm font-medium text-card-foreground">
-                Date of Birth
-              </label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                className="h-12"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="phoneNumber" className="text-sm font-medium text-card-foreground">
+                  Phone Number
+                </label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="Phone number"
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="dateOfBirth" className="text-sm font-medium text-card-foreground">
+                  Date of Birth
+                </label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  className="h-12"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -251,8 +269,8 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
       </Card>
 
       {/* Footer */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="text-center py-4">
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
           <span>© 2025 Plamento</span>
           <span>|</span>
           <button className="hover:text-foreground">Support</button>
