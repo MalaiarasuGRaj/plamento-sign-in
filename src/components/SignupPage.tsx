@@ -179,7 +179,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="phoneNumber" className="text-sm font-medium text-card-foreground">
-                  Phone Number
+                  Phone Number <span className="text-destructive">*</span>
                 </label>
                 <Input
                   id="phoneNumber"
@@ -188,11 +188,12 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
                   value={formData.phoneNumber}
                   onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
                   className="h-12"
+                  required
                 />
               </div>
               <div className="space-y-2">
                 <label htmlFor="dateOfBirth" className="text-sm font-medium text-card-foreground">
-                  Date of Birth
+                  Date of Birth <span className="text-destructive">*</span>
                 </label>
                 <Input
                   id="dateOfBirth"
@@ -200,6 +201,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
                   className="h-12"
+                  required
                 />
               </div>
             </div>
