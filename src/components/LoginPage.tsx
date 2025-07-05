@@ -74,6 +74,9 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
           <h1 className="text-2xl font-semibold text-card-foreground mb-2">
             Sign in to Plamento
           </h1>
+          <div className="flex items-center gap-2 justify-center mb-3">
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
+          </div>
           <p className="text-muted-foreground text-sm">
             Welcome back! Please sign in to continue
           </p>
