@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
@@ -14,6 +16,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +24,34 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
     
     const success = await onLogin(email, password);
     if (!success) {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Google Sign-in Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -56,7 +87,9 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
           <div className="flex justify-center">
             <button 
               type="button"
-              className="w-full max-w-xs h-12 rounded-md bg-white border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full max-w-xs h-12 rounded-md bg-white border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
