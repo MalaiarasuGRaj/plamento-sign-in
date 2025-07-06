@@ -214,7 +214,13 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
       {/* Main signup card */}
       <Card className="w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
         <CardHeader className="text-center pb-4">
-          <div className="flex items-center mb-4">
+          <h1 className="text-2xl font-semibold text-card-foreground mb-2">
+            Create Account
+          </h1>
+          <p className="text-muted-foreground text-sm mb-4">
+            Fill in your details to get started
+          </p>
+          <div className="flex items-center">
             <Button
               type="button"
               variant="ghost"
@@ -225,12 +231,6 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </div>
-          <h1 className="text-2xl font-semibold text-card-foreground mb-2">
-            Create Account
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Fill in your details to get started
-          </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -325,39 +325,46 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               <label htmlFor="dateOfBirth" className="text-sm font-medium text-card-foreground">
                 Date of Birth <span className="text-destructive">*</span>
               </label>
-              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal",
-                      !formData.dateOfBirth && "text-muted-foreground"
-                    )}
-                  >
-                    {formData.dateOfBirth ? (
-                      format(formData.dateOfBirth, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.dateOfBirth}
-                    onSelect={(date) => {
-                      handleInputChange("dateOfBirth", date);
-                      setDatePickerOpen(false);
-                    }}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="relative">
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth ? format(formData.dateOfBirth, "yyyy-MM-dd") : ""}
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value) : undefined;
+                    handleInputChange("dateOfBirth", date);
+                  }}
+                  className="h-12 pr-12"
+                  max={format(new Date(), "yyyy-MM-dd")}
+                  min="1900-01-01"
+                  required
+                />
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-card-foreground"
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.dateOfBirth}
+                      onSelect={(date) => {
+                        handleInputChange("dateOfBirth", date);
+                        setDatePickerOpen(false);
+                      }}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             <div className="space-y-2">
