@@ -14,15 +14,30 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to logout",
+          variant: "destructive"
+        });
+        console.error("Logout error:", error);
+      } else {
+        toast({
+          title: "Success",
+          description: "Logged out successfully"
+        });
+        onLogout();
+      }
+    } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to logout",
+        title: "Error", 
+        description: "An unexpected error occurred during logout",
         variant: "destructive"
       });
-    } else {
-      onLogout();
+      console.error("Logout failed:", error);
+      onLogout(); // Still call onLogout to clear the UI state
     }
   };
 

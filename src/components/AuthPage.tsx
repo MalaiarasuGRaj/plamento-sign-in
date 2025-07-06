@@ -18,8 +18,13 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Don't auto-login for password recovery sessions
+        if (event === 'PASSWORD_RECOVERY') {
+          return;
+        }
+        
         setSession(session);
-        if (session?.user) {
+        if (session?.user && event !== 'SIGNED_OUT') {
           onAuthSuccess(session.user);
         }
       }
@@ -27,8 +32,12 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Don't auto-login if this is a password recovery session
+      const urlParams = new URLSearchParams(window.location.search);
+      const isPasswordRecovery = urlParams.get('type') === 'recovery';
+      
       setSession(session);
-      if (session?.user) {
+      if (session?.user && !isPasswordRecovery) {
         onAuthSuccess(session.user);
       }
     });
