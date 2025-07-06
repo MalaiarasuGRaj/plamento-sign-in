@@ -15,6 +15,8 @@ const ResetPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,11 +50,11 @@ const ResetPasswordPage = () => {
 
   useEffect(() => {
     // Check if we have the required parameters
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
+    const token = searchParams.get('access_token');
+    const refresh = searchParams.get('refresh_token');
     const type = searchParams.get('type');
 
-    if (!accessToken || !refreshToken || type !== 'recovery') {
+    if (!token || !refresh || type !== 'recovery') {
       toast({
         title: "Invalid Reset Link",
         description: "The reset link is invalid or has expired. Please request a new one.",
@@ -62,11 +64,9 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    // Set the session with the tokens
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    });
+    // Store tokens for password update without logging in
+    setAccessToken(token);
+    setRefreshToken(refresh);
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,9 +90,24 @@ const ResetPasswordPage = () => {
       return;
     }
 
+    if (!accessToken || !refreshToken) {
+      toast({
+        title: "Error",
+        description: "Invalid reset session. Please request a new reset link.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Temporarily set the session to update password
+      await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -104,6 +119,9 @@ const ResetPasswordPage = () => {
           variant: "destructive"
         });
       } else {
+        // Sign out user after password update to prevent auto-login
+        await supabase.auth.signOut();
+        
         setIsSuccess(true);
         toast({
           title: "Success!",
