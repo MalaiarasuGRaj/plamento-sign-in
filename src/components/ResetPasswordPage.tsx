@@ -49,24 +49,36 @@ const ResetPasswordPage = () => {
   const passwordStrength = calculatePasswordStrength(newPassword);
 
   useEffect(() => {
-    // Check if we have the required parameters
+    // Check if we have the required parameters from Supabase reset link
     const token = searchParams.get('access_token');
-    const refresh = searchParams.get('refresh_token');
+    const refresh = searchParams.get('refresh_token'); 
     const type = searchParams.get('type');
+    
+    // Also check for alternative parameter names that Supabase might use
+    const tokenHash = searchParams.get('token_hash');
+    const tokenParam = searchParams.get('token');
 
-    if (!token || !refresh || type !== 'recovery') {
-      toast({
-        title: "Invalid Reset Link",
-        description: "The reset link is invalid or has expired. Please request a new one.",
-        variant: "destructive"
-      });
-      navigate('/');
+    // If we have the standard tokens, use them
+    if (token && refresh && type === 'recovery') {
+      setAccessToken(token);
+      setRefreshToken(refresh);
+      return;
+    }
+    
+    // If we have token_hash or token (alternative Supabase format), handle it
+    if ((tokenHash || tokenParam) && type === 'recovery') {
+      // For these cases, we'll handle the reset without pre-storing tokens
+      // The session will be established when the user submits the form
       return;
     }
 
-    // Store tokens for password update without logging in
-    setAccessToken(token);
-    setRefreshToken(refresh);
+    // If no valid parameters, show error and redirect
+    toast({
+      title: "Invalid Reset Link",
+      description: "The reset link is invalid or has expired. Please request a new one.",
+      variant: "destructive"
+    });
+    navigate('/');
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,24 +102,57 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    if (!accessToken || !refreshToken) {
-      toast({
-        title: "Error",
-        description: "Invalid reset session. Please request a new reset link.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Temporarily set the session to update password
-      await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
+      // Get URL parameters for token handling
+      const token = searchParams.get('access_token');
+      const refresh = searchParams.get('refresh_token');
+      const tokenHash = searchParams.get('token_hash');
+      const tokenParam = searchParams.get('token');
+      const type = searchParams.get('type');
 
+      if (type !== 'recovery') {
+        toast({
+          title: "Error",
+          description: "Invalid reset session. Please request a new reset link.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Try different approaches based on available tokens
+      if (token && refresh) {
+        // Standard token approach
+        await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: refresh
+        });
+      } else if (tokenHash) {
+        // Token hash approach - verify the session first
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery'
+        });
+        
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Invalid or expired reset link. Please request a new one.",
+            variant: "destructive"
+          });
+          return;
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Invalid reset session. Please request a new reset link.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update the password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
