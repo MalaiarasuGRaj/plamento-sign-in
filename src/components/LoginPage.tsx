@@ -166,6 +166,15 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
                 Sign up
               </button>
             </p>
+            {/* Temporary test link for debugging */}
+            <div className="mt-2">
+              <a 
+                href="/reset-password" 
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                [Test] Direct Reset Password Page
+              </a>
+            </div>
           </div>
         </CardContent>
       </Card>

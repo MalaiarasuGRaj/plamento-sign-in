@@ -49,44 +49,40 @@ const ResetPasswordPage = () => {
   const passwordStrength = calculatePasswordStrength(newPassword);
 
   useEffect(() => {
-    // Debug: Log all URL parameters
-    console.log('Reset Password Page - All URL params:', Object.fromEntries(searchParams.entries()));
+    // Debug: Log all URL parameters to see what Supabase actually sends
+    const allParams = Object.fromEntries(searchParams.entries());
+    console.log('Reset Password Page - URL params received:', allParams);
+    console.log('Current URL:', window.location.href);
     
-    // Check if we have the required parameters from Supabase reset link
-    const token = searchParams.get('access_token');
-    const refresh = searchParams.get('refresh_token'); 
+    // Check if this looks like a reset link
     const type = searchParams.get('type');
+    const hasResetParams = searchParams.has('access_token') || searchParams.has('token_hash') || searchParams.has('token');
     
-    // Also check for alternative parameter names that Supabase might use
-    const tokenHash = searchParams.get('token_hash');
-    const tokenParam = searchParams.get('token');
-
-    console.log('Reset tokens found:', { token, refresh, type, tokenHash, tokenParam });
-
-    // If we have the standard tokens, use them
-    if (token && refresh && type === 'recovery') {
-      console.log('Using standard tokens for reset');
-      setAccessToken(token);
-      setRefreshToken(refresh);
+    console.log('Reset check:', { type, hasResetParams });
+    
+    // If this is definitely NOT a reset link, redirect
+    if (!type && !hasResetParams && !window.location.href.includes('reset-password')) {
+      console.log('Definitely not a reset link, redirecting to login');
+      toast({
+        title: "Invalid Reset Link",
+        description: "Please use the reset link from your email.",
+        variant: "destructive"
+      });
+      navigate('/');
       return;
     }
     
-    // If we have token_hash or token (alternative Supabase format), handle it
-    if ((tokenHash || tokenParam) && type === 'recovery') {
-      console.log('Using alternative token format for reset');
-      // For these cases, we'll handle the reset without pre-storing tokens
-      // The session will be established when the user submits the form
-      return;
+    // Store tokens if available
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    
+    if (accessToken && refreshToken) {
+      setAccessToken(accessToken);
+      setRefreshToken(refreshToken);
+      console.log('Tokens stored for password reset');
     }
-
-    // If no valid parameters, show error and redirect
-    console.log('No valid reset parameters found, redirecting to login');
-    toast({
-      title: "Invalid Reset Link",
-      description: "The reset link is invalid or has expired. Please request a new one.",
-      variant: "destructive"
-    });
-    navigate('/');
+    
+    console.log('Showing reset password form');
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
