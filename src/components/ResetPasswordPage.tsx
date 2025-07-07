@@ -49,6 +49,9 @@ const ResetPasswordPage = () => {
   const passwordStrength = calculatePasswordStrength(newPassword);
 
   useEffect(() => {
+    // Debug: Log all URL parameters
+    console.log('Reset Password Page - All URL params:', Object.fromEntries(searchParams.entries()));
+    
     // Check if we have the required parameters from Supabase reset link
     const token = searchParams.get('access_token');
     const refresh = searchParams.get('refresh_token'); 
@@ -58,8 +61,11 @@ const ResetPasswordPage = () => {
     const tokenHash = searchParams.get('token_hash');
     const tokenParam = searchParams.get('token');
 
+    console.log('Reset tokens found:', { token, refresh, type, tokenHash, tokenParam });
+
     // If we have the standard tokens, use them
     if (token && refresh && type === 'recovery') {
+      console.log('Using standard tokens for reset');
       setAccessToken(token);
       setRefreshToken(refresh);
       return;
@@ -67,12 +73,14 @@ const ResetPasswordPage = () => {
     
     // If we have token_hash or token (alternative Supabase format), handle it
     if ((tokenHash || tokenParam) && type === 'recovery') {
+      console.log('Using alternative token format for reset');
       // For these cases, we'll handle the reset without pre-storing tokens
       // The session will be established when the user submits the form
       return;
     }
 
     // If no valid parameters, show error and redirect
+    console.log('No valid reset parameters found, redirecting to login');
     toast({
       title: "Invalid Reset Link",
       description: "The reset link is invalid or has expired. Please request a new one.",

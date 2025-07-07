@@ -18,13 +18,17 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('AuthPage - Auth state change:', { event, hasSession: !!session, user: session?.user?.email });
+        
         // Don't auto-login for password recovery sessions
         if (event === 'PASSWORD_RECOVERY') {
+          console.log('AuthPage - Preventing auto-login for PASSWORD_RECOVERY event');
           return;
         }
         
         setSession(session);
         if (session?.user && event !== 'SIGNED_OUT') {
+          console.log('AuthPage - Calling onAuthSuccess for user:', session.user.email);
           onAuthSuccess(session.user);
         }
       }
@@ -36,9 +40,19 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
       const urlParams = new URLSearchParams(window.location.search);
       const isPasswordRecovery = urlParams.get('type') === 'recovery';
       
+      console.log('AuthPage - Initial session check:', { 
+        hasSession: !!session, 
+        user: session?.user?.email, 
+        isPasswordRecovery,
+        currentPath: window.location.pathname 
+      });
+      
       setSession(session);
       if (session?.user && !isPasswordRecovery) {
+        console.log('AuthPage - Auto-logging in existing user:', session.user.email);
         onAuthSuccess(session.user);
+      } else if (isPasswordRecovery) {
+        console.log('AuthPage - Skipping auto-login due to password recovery');
       }
     });
 
