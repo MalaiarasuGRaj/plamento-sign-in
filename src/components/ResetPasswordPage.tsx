@@ -53,16 +53,26 @@ const ResetPasswordPage = () => {
     const allParams = Object.fromEntries(searchParams.entries());
     console.log('Reset Password Page - URL params received:', allParams);
     console.log('Current URL:', window.location.href);
+    console.log('Hash:', window.location.hash);
     
-    // Check if this looks like a reset link
+    // Check if this is a valid reset link by looking for common Supabase reset parameters
     const type = searchParams.get('type');
-    const hasResetParams = searchParams.has('access_token') || searchParams.has('token_hash') || searchParams.has('token');
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    const tokenHash = searchParams.get('token_hash');
     
-    console.log('Reset check:', { type, hasResetParams });
+    console.log('Reset parameters check:', { 
+      type, 
+      hasAccessToken: !!accessToken, 
+      hasRefreshToken: !!refreshToken,
+      hasTokenHash: !!tokenHash
+    });
     
-    // If this is definitely NOT a reset link, redirect
-    if (!type && !hasResetParams && !window.location.href.includes('reset-password')) {
-      console.log('Definitely not a reset link, redirecting to login');
+    // Allow the page to load if we have any indication this is a reset link
+    const hasResetParams = accessToken || tokenHash || type === 'recovery';
+    
+    if (!hasResetParams && !window.location.href.includes('reset-password')) {
+      console.log('No reset parameters found, redirecting to login');
       toast({
         title: "Invalid Reset Link",
         description: "Please use the reset link from your email.",
@@ -72,17 +82,7 @@ const ResetPasswordPage = () => {
       return;
     }
     
-    // Store tokens if available
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (accessToken && refreshToken) {
-      setAccessToken(accessToken);
-      setRefreshToken(refreshToken);
-      console.log('Tokens stored for password reset');
-    }
-    
-    console.log('Showing reset password form');
+    console.log('Reset password form will be shown');
   }, [searchParams, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,53 +112,73 @@ const ResetPasswordPage = () => {
       // Get URL parameters for token handling
       const accessToken = searchParams.get('access_token');
       const refreshToken = searchParams.get('refresh_token');
+      const tokenHash = searchParams.get('token_hash');
       const type = searchParams.get('type');
 
-      console.log('Password update attempt with params:', { 
+      console.log('Password update attempt with all params:', { 
         hasAccessToken: !!accessToken, 
-        hasRefreshToken: !!refreshToken, 
-        type 
+        hasRefreshToken: !!refreshToken,
+        hasTokenHash: !!tokenHash,
+        type,
+        allParams: Object.fromEntries(searchParams.entries())
       });
 
-      // Verify we have a valid recovery session
-      if (type !== 'recovery') {
-        console.log('Invalid type parameter');
+      // Handle different types of reset tokens that Supabase might send
+      let sessionSet = false;
+
+      // Try approach 1: Standard access_token and refresh_token
+      if (accessToken && refreshToken && type === 'recovery') {
+        console.log('Attempting session with access/refresh tokens...');
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+        if (!sessionError) {
+          console.log('Session set successfully with tokens');
+          sessionSet = true;
+        } else {
+          console.error('Session error with tokens:', sessionError);
+        }
+      }
+
+      // Try approach 2: Token hash verification (newer Supabase flow)
+      if (!sessionSet && tokenHash && type === 'recovery') {
+        console.log('Attempting verification with token hash...');
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery'
+        });
+
+        if (!error && data.session) {
+          console.log('Session verified successfully with token hash');
+          sessionSet = true;
+        } else {
+          console.error('Token hash verification error:', error);
+        }
+      }
+
+      // Try approach 3: Direct password update if we have a current session
+      if (!sessionSet) {
+        console.log('Checking current session...');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('Found existing session');
+          sessionSet = true;
+        }
+      }
+
+      if (!sessionSet) {
+        console.log('No valid session could be established');
         toast({
           title: "Error",
-          description: "Invalid reset link. Please request a new reset link.",
+          description: "Invalid or expired reset link. Please request a new reset link.",
           variant: "destructive"
         });
         return;
       }
 
-      if (!accessToken || !refreshToken) {
-        console.log('Missing tokens');
-        toast({
-          title: "Error",
-          description: "Invalid reset session. Please request a new reset link.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Set the session using the tokens from the URL
-      console.log('Setting session with tokens...');
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        toast({
-          title: "Error",
-          description: "Failed to authenticate reset session. Please request a new reset link.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Session set successfully, updating password...');
+      console.log('Session established, updating password...');
 
       // Update the password
       const { error: updateError } = await supabase.auth.updateUser({
