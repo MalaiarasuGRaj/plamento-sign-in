@@ -83,23 +83,45 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
     return "bg-green-500";
   };
 
-  // Check if email already exists using a more reliable method
+  // Check if email already exists using signInWithPassword
   const checkEmailExists = async (email: string) => {
     try {
-      // Use signUp with a dummy password to check if email exists
-      // Supabase will return specific error if email is already registered
-      const { error } = await supabase.auth.signUp({
+      // Try to sign in with the email and a dummy password
+      // If email doesn't exist, Supabase returns "Invalid login credentials"
+      // If email exists but password is wrong, it also returns "Invalid login credentials"
+      // But we can differentiate by the specific error message
+      const { error } = await supabase.auth.signInWithPassword({
         email: email,
-        password: 'dummy-check-password-123',
-        options: {
-          emailRedirectTo: 'about:blank' // Use a dummy redirect
-        }
+        password: 'dummy-test-password-that-should-fail-123456'
       });
       
-      // If error message indicates user already registered, return true
-      return error?.message?.includes('already') || error?.message?.includes('registered');
+      // If no error, somehow the dummy password worked (very unlikely)
+      if (!error) {
+        await supabase.auth.signOut(); // Sign out immediately
+        return true;
+      }
+      
+      // Check if the error indicates the user exists but password is wrong
+      // vs user doesn't exist at all
+      const errorMessage = error.message.toLowerCase();
+      
+      // If it's specifically about invalid credentials and not about user not found,
+      // it means the email exists
+      if (errorMessage.includes('invalid') && errorMessage.includes('credentials')) {
+        // This could mean either email doesn't exist OR email exists but password is wrong
+        // Let's try a different approach - attempt password reset to see if email exists
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'about:blank'
+        });
+        
+        // If reset succeeds (no error), email exists
+        // If reset fails with "user not found" type error, email doesn't exist
+        return !resetError || !resetError.message.toLowerCase().includes('not found');
+      }
+      
+      return false;
     } catch (error) {
-      // If there's an error, assume email might exist to be safe
+      // If there's an unexpected error, assume email might exist to be safe
       return true;
     }
   };
@@ -382,36 +404,11 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
                     const date = e.target.value ? new Date(e.target.value) : undefined;
                     handleInputChange("dateOfBirth", date);
                   }}
-                  className="h-12 pr-12"
+                  className="h-12"
                   max={format(new Date(), "yyyy-MM-dd")}
                   min="1900-01-01"
                   required
                 />
-                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-card-foreground"
-                    >
-                      <CalendarIcon className="h-4 w-4" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.dateOfBirth}
-                      onSelect={(date) => {
-                        handleInputChange("dateOfBirth", date);
-                        setDatePickerOpen(false);
-                      }}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
               </div>
             </div>
 
