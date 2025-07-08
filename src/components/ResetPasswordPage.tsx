@@ -21,28 +21,39 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Password strength calculation
+  // Password validation functions
+  const validatePassword = (password: string) => {
+    const errors = [];
+    if (password.length < 8) errors.push("Password must be at least 8 characters");
+    if (!/[A-Z]/.test(password)) errors.push("Include at least one uppercase letter");
+    if (!/[a-z]/.test(password)) errors.push("Include at least one lowercase letter");
+    if (!/[0-9]/.test(password)) errors.push("Include at least one number");
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) errors.push("Include at least one special character");
+    return errors;
+  };
+
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+    if (password.length >= 8) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 20;
     return strength;
   };
 
   const getPasswordStrengthText = (strength: number) => {
     if (strength === 0) return "";
-    if (strength <= 25) return "Weak";
-    if (strength <= 50) return "Fair";
-    if (strength <= 75) return "Good";
+    if (strength < 60) return "Weak";
+    if (strength < 80) return "Fair";
+    if (strength < 100) return "Good";
     return "Strong";
   };
 
   const getPasswordStrengthColor = (strength: number) => {
-    if (strength <= 25) return "bg-destructive";
-    if (strength <= 50) return "bg-yellow-500";
-    if (strength <= 75) return "bg-blue-500";
+    if (strength < 60) return "bg-destructive";
+    if (strength < 80) return "bg-yellow-500";
+    if (strength < 100) return "bg-blue-500";
     return "bg-green-500";
   };
 
@@ -88,19 +99,21 @@ const ResetPasswordPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newPassword !== confirmPassword) {
+    // Validate password strength
+    const passwordErrors = validatePassword(newPassword);
+    if (passwordErrors.length > 0) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: "Password Requirements Not Met",
+        description: passwordErrors.join(" • "),
         variant: "destructive"
       });
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword !== confirmPassword) {
       toast({
         title: "Error",
-        description: "Password must be at least 6 characters",
+        description: "Passwords do not match",
         variant: "destructive"
       });
       return;

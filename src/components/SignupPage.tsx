@@ -47,29 +47,61 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
     confirmPassword: ""
   });
 
-  // Password strength calculation
+  // Password validation functions
+  const validatePassword = (password: string) => {
+    const errors = [];
+    if (password.length < 8) errors.push("Password must be at least 8 characters");
+    if (!/[A-Z]/.test(password)) errors.push("Include at least one uppercase letter");
+    if (!/[a-z]/.test(password)) errors.push("Include at least one lowercase letter");
+    if (!/[0-9]/.test(password)) errors.push("Include at least one number");
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) errors.push("Include at least one special character");
+    return errors;
+  };
+
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+    if (password.length >= 8) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 20;
     return strength;
   };
 
   const getPasswordStrengthText = (strength: number) => {
     if (strength === 0) return "";
-    if (strength <= 25) return "Weak";
-    if (strength <= 50) return "Fair";
-    if (strength <= 75) return "Good";
+    if (strength < 60) return "Weak";
+    if (strength < 80) return "Fair";
+    if (strength < 100) return "Good";
     return "Strong";
   };
 
   const getPasswordStrengthColor = (strength: number) => {
-    if (strength <= 25) return "bg-destructive";
-    if (strength <= 50) return "bg-yellow-500";
-    if (strength <= 75) return "bg-blue-500";
+    if (strength < 60) return "bg-destructive";
+    if (strength < 80) return "bg-yellow-500";
+    if (strength < 100) return "bg-blue-500";
     return "bg-green-500";
+  };
+
+  // Check if email already exists using a more reliable method
+  const checkEmailExists = async (email: string) => {
+    try {
+      // Use signUp with a dummy password to check if email exists
+      // Supabase will return specific error if email is already registered
+      const { error } = await supabase.auth.signUp({
+        email: email,
+        password: 'dummy-check-password-123',
+        options: {
+          emailRedirectTo: 'about:blank' // Use a dummy redirect
+        }
+      });
+      
+      // If error message indicates user already registered, return true
+      return error?.message?.includes('already') || error?.message?.includes('registered');
+    } catch (error) {
+      // If there's an error, assume email might exist to be safe
+      return true;
+    }
   };
 
   const passwordStrength = calculatePasswordStrength(formData.password);
@@ -131,19 +163,35 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
+    // Check for duplicate email first
+    setIsLoading(true);
+    const emailExists = await checkEmailExists(formData.email);
+    setIsLoading(false);
+    
+    if (emailExists) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: "Email Already Registered",
+        description: "This email is already registered. Please login or use a different email.",
         variant: "destructive"
       });
       return;
     }
 
-    if (formData.password.length < 6) {
+    // Validate password strength
+    const passwordErrors = validatePassword(formData.password);
+    if (passwordErrors.length > 0) {
+      toast({
+        title: "Password Requirements Not Met",
+        description: passwordErrors.join(" • "),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
-        description: "Password must be at least 6 characters",
+        description: "Passwords do not match",
         variant: "destructive"
       });
       return;
