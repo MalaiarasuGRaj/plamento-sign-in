@@ -404,11 +404,12 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
                     const date = e.target.value ? new Date(e.target.value) : undefined;
                     handleInputChange("dateOfBirth", date);
                   }}
-                  className="h-12"
+                  className="h-12 pr-12"
                   max={format(new Date(), "yyyy-MM-dd")}
                   min="1900-01-01"
                   required
                 />
+                <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
