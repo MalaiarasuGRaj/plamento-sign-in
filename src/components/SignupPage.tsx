@@ -395,22 +395,19 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               <label htmlFor="dateOfBirth" className="text-sm font-medium text-card-foreground">
                 Date of Birth <span className="text-destructive">*</span>
               </label>
-              <div className="relative">
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={formData.dateOfBirth ? format(formData.dateOfBirth, "yyyy-MM-dd") : ""}
-                  onChange={(e) => {
-                    const date = e.target.value ? new Date(e.target.value) : undefined;
-                    handleInputChange("dateOfBirth", date);
-                  }}
-                  className="h-12 pr-12"
-                  max={format(new Date(), "yyyy-MM-dd")}
-                  min="1900-01-01"
-                  required
-                />
-                <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth ? format(formData.dateOfBirth, "yyyy-MM-dd") : ""}
+                onChange={(e) => {
+                  const date = e.target.value ? new Date(e.target.value) : undefined;
+                  handleInputChange("dateOfBirth", date);
+                }}
+                className="h-12"
+                max={format(new Date(), "yyyy-MM-dd")}
+                min="1900-01-01"
+                required
+              />
             </div>
 
             <div className="space-y-2">
