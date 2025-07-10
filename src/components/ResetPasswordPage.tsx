@@ -347,6 +347,26 @@ const ResetPasswordPage = () => {
                       style={{ width: `${passwordStrength}%` }}
                     />
                   </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p className="font-medium">Requirements:</p>
+                    <ul className="space-y-1">
+                      <li className={newPassword.length >= 8 ? "text-green-600" : "text-muted-foreground"}>
+                        • At least 8 characters
+                      </li>
+                      <li className={/[A-Z]/.test(newPassword) ? "text-green-600" : "text-muted-foreground"}>
+                        • One uppercase letter
+                      </li>
+                      <li className={/[a-z]/.test(newPassword) ? "text-green-600" : "text-muted-foreground"}>
+                        • One lowercase letter
+                      </li>
+                      <li className={/[0-9]/.test(newPassword) ? "text-green-600" : "text-muted-foreground"}>
+                        • One number
+                      </li>
+                      <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? "text-green-600" : "text-muted-foreground"}>
+                        • One special character
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>

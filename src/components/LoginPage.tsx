@@ -143,6 +143,28 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
                   </button>
                 </div>
               </div>
+              {password && (
+                <div className="text-xs text-muted-foreground space-y-1 mt-2">
+                  <p className="font-medium">Password Requirements:</p>
+                  <ul className="space-y-1">
+                    <li className={password.length >= 8 ? "text-green-600" : "text-muted-foreground"}>
+                      • At least 8 characters
+                    </li>
+                    <li className={/[A-Z]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
+                      • One uppercase letter
+                    </li>
+                    <li className={/[a-z]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
+                      • One lowercase letter
+                    </li>
+                    <li className={/[0-9]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
+                      • One number
+                    </li>
+                    <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
+                      • One special character
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             <Button
