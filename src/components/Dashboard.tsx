@@ -1,9 +1,11 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import UserDropdown from "./UserDropdown";
 
 interface DashboardProps {
   user: User;
@@ -12,6 +14,7 @@ interface DashboardProps {
 
 const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
@@ -32,50 +35,45 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       }
     } catch (error) {
       toast({
-        title: "Error", 
+        title: "Error",
         description: "An unexpected error occurred during logout",
         variant: "destructive"
       });
       console.error("Logout failed:", error);
-      onLogout(); // Still call onLogout to clear the UI state
+      onLogout();
     }
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-background p-6 relative">
+      {/* ✅ PLAMENTO Logo (Top-Left) */}
+      <div className="absolute top-6 left-6 z-10">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
             <div className="w-3 h-3 bg-white rounded-sm transform rotate-45"></div>
           </div>
           <span className="text-foreground font-semibold text-lg">PLAMENTO</span>
         </div>
-        <Button onClick={handleLogout} variant="outline">
-          Logout
-        </Button>
       </div>
 
-      {/* Welcome Card */}
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            Welcome to Plamento! 🎉
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            You have successfully signed in to your account.
-          </p>
-          <div className="bg-muted p-4 rounded-lg">
-            <p className="text-sm font-medium">Logged in as:</p>
-            <p className="text-primary">{user.email}</p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Your profile data has been stored securely in the database.
-          </p>
-        </CardContent>
-      </Card>
+      {/* ✅ User Dropdown (Top-Right) */}
+      <div className="absolute top-6 right-6 z-10">
+        <UserDropdown user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* ✅ Welcome Title */}
+      <h1 className="text-2xl text-center text-foreground mt-20 mb-8">
+        Welcome to Plamento! 🎉
+      </h1>
+
+      {/* ✅ 4 Boxes in 2x2 Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mx-auto max-w-2xl mt-8">
+        {[...Array(4)].map((_, index) => (
+          <Card key={index} className="w-64 h-36 bg-card rounded-lg shadow-md">
+            {/* Optional: Add content inside each box */}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

@@ -83,48 +83,6 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
     return "bg-green-500";
   };
 
-  // Check if email already exists using signInWithPassword
-  const checkEmailExists = async (email: string) => {
-    try {
-      // Try to sign in with the email and a dummy password
-      // If email doesn't exist, Supabase returns "Invalid login credentials"
-      // If email exists but password is wrong, it also returns "Invalid login credentials"
-      // But we can differentiate by the specific error message
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: 'dummy-test-password-that-should-fail-123456'
-      });
-      
-      // If no error, somehow the dummy password worked (very unlikely)
-      if (!error) {
-        await supabase.auth.signOut(); // Sign out immediately
-        return true;
-      }
-      
-      // Check if the error indicates the user exists but password is wrong
-      // vs user doesn't exist at all
-      const errorMessage = error.message.toLowerCase();
-      
-      // If it's specifically about invalid credentials and not about user not found,
-      // it means the email exists
-      if (errorMessage.includes('invalid') && errorMessage.includes('credentials')) {
-        // This could mean either email doesn't exist OR email exists but password is wrong
-        // Let's try a different approach - attempt password reset to see if email exists
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: 'about:blank'
-        });
-        
-        // If reset succeeds (no error), email exists
-        // If reset fails with "user not found" type error, email doesn't exist
-        return !resetError || !resetError.message.toLowerCase().includes('not found');
-      }
-      
-      return false;
-    } catch (error) {
-      // If there's an unexpected error, assume email might exist to be safe
-      return true;
-    }
-  };
 
   const passwordStrength = calculatePasswordStrength(formData.password);
 
@@ -184,20 +142,6 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check for duplicate email first
-    setIsLoading(true);
-    const emailExists = await checkEmailExists(formData.email);
-    setIsLoading(false);
-    
-    if (emailExists) {
-      toast({
-        title: "Email Already Registered",
-        description: "This email is already registered. Please login or use a different email.",
-        variant: "destructive"
-      });
-      return;
-    }
 
     // Validate password strength
     const passwordErrors = validatePassword(formData.password);
@@ -236,7 +180,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: "https://8080-firebase-plamento-1752483210125.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev/reset-password",
           data: {
             full_name: `${formData.firstName} ${formData.lastName}`,
             phone_number: formData.phoneNumber ? `${formData.countryCode}${formData.phoneNumber}` : null,
@@ -245,12 +189,21 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
         }
       });
 
-      if (error) {
-        toast({
-          title: "Signup Failed",
-          description: error.message,
-          variant: "destructive"
+      if (error) {        
+        // Check for specific error indicating email is already registered
+        if (error.message.includes("already an existing user with this email")) {
+           toast({
+            title: "Email Already Registered",
+            description: "This email is already registered. Please login or use a different email.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message,
+            variant: "destructive"
         });
+        }
       } else {
         toast({
           title: "Success!",
@@ -290,17 +243,6 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
           <p className="text-muted-foreground text-sm mb-4">
             Fill in your details to get started
           </p>
-          <div className="flex items-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onBackToLogin}
-              className="absolute left-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -497,7 +439,7 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
             <Button
               type="submit"
               variant="login"
-              className="w-full h-12 mt-6"
+              className="w-full h-12 mt-6 btn-create-account"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Create Account"}

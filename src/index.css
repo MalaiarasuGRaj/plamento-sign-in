@@ -9,98 +9,167 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Light blue theme for Plamento */
-    --background: 210 40% 98%;
-    --foreground: 213 31% 18%;
+    --background: 0 0% 100%; /* White background for light mode */
+    --foreground: 10 20% 10%; /* Dark gray text for light mode */
 
     --card: 0 0% 100%;
-    --card-foreground: 213 31% 18%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 31% 18%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 213 94% 68%;
-    --primary-foreground: 0 0% 100%;
+    --gradient-primary: linear-gradient(to right, #6a5acd, #1e90ff); /* Purple to Blue Gradient */
+    --gradient-hero: linear-gradient(to bottom, #6a5acd, #1e90ff); /* Purple to Blue Gradient */
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 213 31% 18%;
+    --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --primary: 217.2 91.2% 59.8%; /* A shade of blue */
+    --primary-foreground: 222.2 47.4% 11.2%; /* Dark text */
 
-    --accent: 213 94% 68%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 213 94% 68%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  @layer base {
+    * {
+      @apply border-border;
+    }
+  }
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    body, html {
+      background-color: var(--background);
+    }
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: 223 13% 11%; /* #0D1117 */
+    --foreground: 0 0% 100%; /* #ffffff */
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --card: 218 16% 13%; /* #161B22 */
+    --card-foreground: 0 0% 100%; /* #ffffff */
 
-    --secondary: 217.2 32.6% 17.5%;
+    --popover: 218 16% 13%; /* #161B22 */
+    --popover-foreground: 0 0% 100%; /* #ffffff */
+
+    --primary: 217.2 91.2% 59.8%; /* A shade of blue - can adjust if needed */
+    --primary-foreground: 0 0% 100%; /* #ffffff */
+
+    --secondary: 210 40% 16%; /* Darker secondary for dark mode */
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 40% 16%;
+    --muted-foreground: 215.4 16.3% 56.9%; /* Lighter muted foreground - can adjust */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 262 83% 58%; /* Violet - keeping this for now */
+    --accent-foreground: 0 0% 100%; /* #ffffff */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --ring: 215.4 16.3% 46.9%; /* Darker ring */
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Explicit dark theme colors based on screenshot */
+    --input-background: 216 14% 34%; /* #30363D */
+    --input-text: 0 0% 100%; /* #ffffff */
+    --input-border: 216 14% 34%; /* #30363D */
+    --placeholder-text: 215.4 16.3% 56.9%; /* Lighter muted foreground - can adjust */
+
+    /* Gradient colors from screenshot */
+    --gradient-start: 217.2 91.2% 59.8%; /* #3B82F6 */
+    --gradient-end: 262 83% 58%; /* #8B5CF6 */
+    --gradient-primary: linear-gradient(to right, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+
+    /* Redundant definitions, already defined above with more specific values */
+    /* --border: 216 14% 34%; */
+
+    --sidebar-background: 223 13% 11%; /* #0D1117 */
+    --sidebar-foreground: 0 0% 100%; /* #ffffff */
+    --sidebar-primary: 240 5.9% 10%; /* Can adjust if needed */
+    --sidebar-primary-foreground: 0 0% 98%; /* Can adjust if needed */
+    --sidebar-accent: 240 3.7% 15.9%; /* Can adjust if needed */
+    --sidebar-accent-foreground: 240 4.8% 95.9%; /* Can adjust if needed */
+    --sidebar-border: 240 3.7% 15.9%; /* Can adjust if needed */
+    --sidebar-ring: 217.2 91.2% 59.8%; /* Can adjust if needed */
+    --gradient-hero: linear-gradient(to bottom, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3); /* Darker shadow */
+    --shadow-glow: 0 0 10px 5px rgba(var(--primary), 0.5); /* Example glow using primary */
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  body,
+  p, h1, h2, h3, h4, h5, h6,
+  span, label {
+    /* Default text color for light mode */
+    color: var(--foreground);
+  }
+}
+
+
+
+@layer components {
+  .btn-hero {
+    background: var(--gradient-primary);
+    border-radius: var(--radius);
+    color: hsl(var(--primary-foreground));
+    font-weight: 600; /* Semibold */
+    /* Add hover effects if needed */
   }
 
-  body {
-    @apply bg-background text-foreground;
+  .btn-ghost {
+    background: none;
+    color: hsl(var(--foreground));
+    /* Add hover effect */
+    &:hover {
+      background-color: hsla(var(--foreground), 0.1); /* Subtle dark background on hover */
+    }
   }
+
+  .feature-card {
+    background: var(--gradient-hero);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-medium); /* Or var(--shadow-glow) */
+    color: hsl(var(--foreground)); /* Ensure text is readable */
+  }
+
+  .feature-square {
+    background: hsl(var(--card)); /* Flat background using card variable */
+    border-radius: var(--radius);
+    box-shadow: none; /* No shadow for flat version */
+    color: hsl(var(--foreground));
+  }
+}
+
+.btn-create-account {
+  background-color: #3B82F6; /* Light blue color */
+  color: #FFFFFF; /* White text */
+  border-radius: var(--radius); /* Apply radius from variables */
+  /* You may need to add other styles here to match the original button's appearance,
+     like padding, border-radius, font-weight, etc. */
 }

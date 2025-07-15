@@ -21,7 +21,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const success = await onLogin(email, password);
     if (!success) {
       setIsLoading(false);
@@ -40,7 +40,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: "https://8080-firebase-plamento-1752483210125.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev/reset-password"
       });
 
       if (error) {
@@ -65,7 +65,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
       {/* Logo in top left */}
       <div className="absolute top-6 left-6">
         <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
 
       {/* Main login card */}
       <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center pb-4">
+        <CardHeader className="text-center pb-4 text-card-foreground">
           <h1 className="text-2xl font-semibold text-card-foreground mb-2">
             Sign in to Plamento
           </h1>
@@ -137,7 +137,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-primary hover:text-primary/80 text-sm"
+                    className="text-primary hover:text-primary/80 text-sm btn-ghost"
                   >
                     Forgot password?
                   </button>
@@ -170,7 +170,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
             <Button
               type="submit"
               variant="login"
-              className="w-full h-12 mt-6"
+              className="w-full h-12 mt-6 btn-hero"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Login →"}
@@ -197,11 +197,11 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>© 2025 Plamento</span>
           <span>|</span>
-          <button className="hover:text-foreground">Support</button>
+          <button className="hover:text-foreground btn-ghost">Support</button>
           <span>|</span>
-          <button className="hover:text-foreground">Privacy</button>
+          <button className="hover:text-foreground btn-ghost">Privacy</button>
           <span>|</span>
-          <button className="hover:text-foreground">Terms</button>
+          <button className="hover:text-foreground btn-ghost">Terms</button>
         </div>
       </div>
     </div>
