@@ -41,7 +41,7 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: "https://8080-firebase-plamento-1752483210125.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev/reset-password"
-      });
+      }); // ✅ Use your correct redirect
 
       if (error) {
         toast({
