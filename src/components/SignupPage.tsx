@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -40,17 +39,15 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
       return;
     }
 
-    setIsLoading(true);
-
     const { error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
-        emailRedirectTo: "https://preview--plamento-sign-in-wizard.lovable.app/reset-password", // ✅ Update this URL
+        emailRedirectTo: "https://preview--plamento-sign-in-wizard.lovable.app/reset-password",
         data: {
           full_name: `${formData.firstName} ${formData.lastName}`,
           phone_number: `${formData.countryCode}${formData.phoneNumber}`,
-          date_of_birth: formData.dateOfBirth,
+          date_of_birth: formData.dateOfBirth
         }
       }
     });
@@ -70,6 +67,16 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
     }
 
     setIsLoading(false);
+  };
+
+  // ✅ Password validation helpers
+  const password = formData.password;
+  const criteria = {
+    length: password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*]/.test(password)
   };
 
   return (
@@ -125,6 +132,8 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               value={formData.dateOfBirth}
               onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
             />
+
+            {/* ✅ Password Field */}
             <Input
               type="password"
               placeholder="Password"
@@ -132,6 +141,21 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               onChange={(e) => handleInputChange("password", e.target.value)}
               required
             />
+
+            {/* ✅ Password Criteria */}
+            {formData.password && (
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium">Password Requirements:</p>
+                <ul className="space-y-1">
+                  <li className={criteria.length ? "text-green-600" : "text-muted-foreground"}>• At least 8 characters</li>
+                  <li className={criteria.upper ? "text-green-600" : "text-muted-foreground"}>• One uppercase letter</li>
+                  <li className={criteria.lower ? "text-green-600" : "text-muted-foreground"}>• One lowercase letter</li>
+                  <li className={criteria.number ? "text-green-600" : "text-muted-foreground"}>• One number</li>
+                  <li className={criteria.special ? "text-green-600" : "text-muted-foreground"}>• One special character (!@#$%^&*)</li>
+                </ul>
+              </div>
+            )}
+
             <Input
               type="password"
               placeholder="Confirm Password"
