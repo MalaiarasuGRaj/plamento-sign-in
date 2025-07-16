@@ -3,28 +3,27 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const [isSessionReady, setIsSessionReady] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Establish session on password reset
   useEffect(() => {
     const access_token = searchParams.get("access_token");
     const refresh_token = searchParams.get("refresh_token");
     const type = searchParams.get("type");
 
     if (access_token && refresh_token && type === "recovery") {
-      supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+      supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      }).then(({ error }) => {
         if (error) {
           toast({
             title: "Session Error",
@@ -33,53 +32,44 @@ const ResetPasswordPage = () => {
           });
           navigate("/");
         }
+        setIsSessionReady(true);
       });
+    } else {
+      toast({
+        title: "Missing Token",
+        description: "Reset token not found. Please use the link from your email.",
+        variant: "destructive",
+      });
+      navigate("/");
     }
   }, [searchParams, toast, navigate]);
 
-  const validatePassword = (pwd: string) => {
-    const issues = [];
-    if (pwd.length < 8) issues.push("At least 8 characters");
-    if (!/[A-Z]/.test(pwd)) issues.push("One uppercase letter");
-    if (!/[a-z]/.test(pwd)) issues.push("One lowercase letter");
-    if (!/[0-9]/.test(pwd)) issues.push("One number");
-    if (!/[!@#$%^&*]/.test(pwd)) issues.push("One special character");
-    return issues;
-  };
-
   const handleReset = async () => {
+    if (!isSessionReady) return;
+
     if (password !== confirm) {
       toast({
         title: "Mismatch",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const errors = validatePassword(password);
-    if (errors.length > 0) {
-      toast({
-        title: "Weak Password",
-        description: errors.join(" • "),
+        description: "Passwords do not match",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
+
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       toast({
-        title: "Error",
+        title: "Update Error",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Success",
-        description: "Password updated successfully. Please log in.",
+        title: "Password Reset",
+        description: "Your password has been updated. Please log in.",
       });
       await supabase.auth.signOut();
       navigate("/");
@@ -89,80 +79,38 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-zinc-900 p-8 rounded-lg shadow-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <Lock className="w-10 h-10 text-blue-500" />
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 relative">
+      {/* ✅ PLAMENTO logo in top left */}
+      <div className="absolute top-6 left-6 z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
+            <div className="w-3 h-3 bg-white rounded-sm transform rotate-45" />
           </div>
-          <h1 className="text-2xl font-bold">Reset Your Password</h1>
-          <p className="text-sm text-zinc-400">Enter a new password below.</p>
+          <span className="text-foreground font-semibold text-lg">PLAMENTO</span>
         </div>
+      </div>
 
-        {/* Form */}
-        <div className="space-y-4">
-          {/* New Password */}
-          <div>
-            <label className="text-sm mb-1 block">New Password</label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-10 bg-zinc-800 text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
+      <h1 className="text-2xl font-bold mb-4">Reset Your Password</h1>
 
-          {/* Confirm Password */}
-          <div>
-            <label className="text-sm mb-1 block">Confirm Password</label>
-            <div className="relative">
-              <Input
-                type={showConfirm ? "text" : "password"}
-                placeholder="Confirm new password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                className="pr-10 bg-zinc-800 text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
-              >
-                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
+      <div className="w-full max-w-md space-y-4 bg-card p-6 rounded-lg shadow">
+        <Input
+          type="password"
+          placeholder="New Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <Input
+          type="password"
+          placeholder="Confirm New Password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          required
+        />
 
-          {/* Password Criteria */}
-          {password && (
-            <div className="text-xs text-zinc-400 space-y-1">
-              <p className="font-medium">Password must include:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li className={password.length >= 8 ? "text-green-400" : ""}>At least 8 characters</li>
-                <li className={/[A-Z]/.test(password) ? "text-green-400" : ""}>One uppercase letter</li>
-                <li className={/[a-z]/.test(password) ? "text-green-400" : ""}>One lowercase letter</li>
-                <li className={/[0-9]/.test(password) ? "text-green-400" : ""}>One number</li>
-                <li className={/[!@#$%^&*]/.test(password) ? "text-green-400" : ""}>One special character</li>
-              </ul>
-            </div>
-          )}
-
-          {/* Button */}
-          <Button onClick={handleReset} className="w-full" disabled={isLoading}>
-            {isLoading ? "Resetting..." : "Update Password"}
-          </Button>
-        </div>
+        <Button className="w-full" onClick={handleReset} disabled={isLoading}>
+          {isLoading ? "Resetting..." : "Reset Password"}
+        </Button>
       </div>
     </div>
   );

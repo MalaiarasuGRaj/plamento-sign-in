@@ -1,3 +1,5 @@
+// File: src/pages/ProfilePage.tsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,45 +8,59 @@ import { useToast } from "@/hooks/use-toast";
 const ProfilePage = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
+    const fetchUserProfile = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
         toast({
-          title: "Error",
+          title: "Auth Error",
           description: "Please log in again.",
-          variant: "destructive"
+          variant: "destructive",
         });
+        navigate("/");
         return;
       }
 
-      setUser(data.user);
+      setUser(user);
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", data.user.id)
-        .single();
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (profileError) {
         toast({
           title: "Error loading profile",
           description: profileError.message,
-          variant: "destructive"
+          variant: "destructive",
         });
-        return;
+      }
+
+      if (!profileData) {
+        toast({
+          title: "Profile Missing",
+          description: "No profile record found for this user.",
+          variant: "destructive",
+        });
       }
 
       setProfile(profileData);
+      setIsLoading(false);
     };
 
-    fetchUser();
-  }, [toast]);
+    fetchUserProfile();
+  }, [navigate, toast]);
 
-  if (!user || !profile) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <p>Loading...</p>
@@ -52,7 +68,8 @@ const ProfilePage = () => {
     );
   }
 
-  const initial = (profile.full_name?.[0] || user.email?.[0] || "?").toUpperCase();
+  const initial =
+    profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
@@ -80,20 +97,20 @@ const ProfilePage = () => {
       <div className="max-w-xl mx-auto mt-32 bg-card rounded-lg shadow-md p-8">
         <h1 className="text-2xl font-bold mb-6">Profile</h1>
 
-        {/* Initial Avatar */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-28 h-28 rounded-full flex items-center justify-center bg-muted text-foreground text-4xl font-bold border border-border">
+        {/* Avatar */}
+        <div className="flex justify-center mb-6">
+          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-foreground border border-border">
             {initial}
           </div>
         </div>
 
         {/* Profile Info */}
-        <div className="space-y-4 text-sm">
-          <p><span className="font-medium"> Full Name:</span> {profile.full_name}</p>
-          <p><span className="font-medium"> Email:</span> {user.email}</p>
-          <p><span className="font-medium"> Phone Number:</span> {profile.phone_number || "Not provided"}</p>
-          <p><span className="font-medium"> Date of Birth:</span> {profile.date_of_birth || "N/A"}</p>
-          <p><span className="font-medium"> Created On:</span> {new Date(profile.created_at).toLocaleDateString()}</p>
+        <div className="space-y-3 text-sm">
+          <p><strong>Full Name:</strong> {profile?.full_name}</p>
+          <p><strong>Email:</strong> {user?.email}</p>
+          <p><strong>Phone:</strong> {profile?.phone_number || "N/A"}</p>
+          <p><strong>Date of Birth:</strong> {profile?.date_of_birth || "N/A"}</p>
+          <p><strong>Account Created:</strong> {new Date(profile?.created_at).toLocaleDateString()}</p>
         </div>
       </div>
     </div>

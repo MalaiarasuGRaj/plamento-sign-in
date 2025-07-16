@@ -43,26 +43,20 @@ CREATE TRIGGER update_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
--- Create function to handle new user signup
+-- Recreate the trigger for auto profile creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, full_name, phone_number, date_of_birth)
   VALUES (
-    NEW.id,
-    NEW.raw_user_meta_data ->> 'full_name',
-    NEW.raw_user_meta_data ->> 'phone_number',
-    CASE 
-      WHEN NEW.raw_user_meta_data ->> 'date_of_birth' IS NOT NULL 
-      THEN (NEW.raw_user_meta_data ->> 'date_of_birth')::DATE 
-      ELSE NULL 
-    END
+    NEW.id, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'phone_number', (NEW.raw_user_meta_data->>'date_of_birth')::DATE
   );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger to automatically create profile on user signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
