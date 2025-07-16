@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserDropdownProps {
   user: User;
@@ -10,88 +17,47 @@ interface UserDropdownProps {
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({ user, onLogout }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const firstLetter =
+  const userInitial =
     user?.user_metadata?.full_name?.charAt(0).toUpperCase() ||
     user?.email?.charAt(0).toUpperCase() ||
     '?';
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
+  const userFullName = user?.user_metadata?.full_name || 'User';
+  const userEmail = user?.email;
 
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsOpen(false);
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscapeKey);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [isOpen]);
+  const handleProfileNavigation = () => {
+    navigate('/profile', { state: { user } });
+  };
 
   return (
-    <div className="relative">
-      {/* User Icon */}
-      <div
-        className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-lg font-bold cursor-pointer shadow-md"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {firstLetter}
-      </div>
-
-      {/* Dropdown Content */}
-      {isOpen && (
-        <div
-          ref={dropdownRef}
-          className={cn(
-            'absolute top-12 right-0 mt-2 w-48 bg-card text-card-foreground rounded-md shadow-lg z-50',
-            'ring-1 ring-border ring-opacity-5'
-          )}
-        >
-          <div className="px-4 py-2 border-b border-border">
-            <p className="font-semibold">{user?.user_metadata?.full_name || 'User'}</p>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Avatar className="cursor-pointer">
+          {/* You can add an AvatarImage here if you store profile pictures */}
+          {/* <AvatarImage src={user.user_metadata.avatar_url} alt="User avatar" /> */}
+          <AvatarFallback>{userInitial}</AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end">
+        <DropdownMenuLabel>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{userFullName}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {userEmail}
+            </p>
           </div>
-
-          {/* View Profile */}
-          <Button
-            variant="ghost"
-            className="w-full text-left px-4 py-2 text-sm hover:bg-muted"
-            onClick={() => {
-              setIsOpen(false);
-              // ✅ Modified navigation to pass user in state
-              navigate("/profile", { state: { user } });
-            }}
-          >
-            View Profile
-          </Button>
-
-          {/* Logout */}
-          <Button
-            variant="ghost"
-            className="w-full text-left px-4 py-2 text-sm hover:bg-muted"
-            onClick={() => {
-              setIsOpen(false);
-              onLogout();
-            }}
-          >
-            Logout
-          </Button>
-        </div>
-      )}
-    </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleProfileNavigation}>
+          View Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onLogout}>
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

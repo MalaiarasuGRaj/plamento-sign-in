@@ -67,12 +67,9 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
       {/* Logo in top left */}
-      <div className="absolute top-6 left-6">
+      <div className="absolute top-6 left-16">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center">
-            <div className="w-3 h-3 bg-white rounded-sm transform rotate-45"></div>
-          </div>
-          <span className="text-foreground font-semibold text-lg">PLAMENTO</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 font-bold text-3xl">Plamento</span>
         </div>
       </div>
 

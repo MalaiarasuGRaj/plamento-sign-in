@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { countries } from "@/lib/countries";
 
 interface SignupPageProps {
   onBackToLogin: () => void;
@@ -12,19 +13,30 @@ interface SignupPageProps {
 const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [dob, setDob] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     countryCode: "+91",
     phoneNumber: "",
-    dateOfBirth: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const handleInputChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    if (value.length > 5) {
+      value = `${value.slice(0, 5)}/${value.slice(5, 9)}`;
+    }
+    setDob(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,34 +46,51 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
       toast({
         title: "Password Mismatch",
         description: "Passwords do not match.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
+
+    let dobForSupabase = null;
+    if (dob) {
+      const dobRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+      if (!dobRegex.test(dob)) {
+        toast({
+          title: "Invalid Date Format",
+          description: "Please enter your date of birth in DD/MM/YYYY format.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const [day, month, year] = dob.split("/");
+      dobForSupabase = `${year}-${month}-${day}`;
+    }
+
+    setIsLoading(true);
 
     const { error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
-        emailRedirectTo: "https://preview--plamento-sign-in-wizard.lovable.app/reset-password",
+        emailRedirectTo: `${window.location.origin}/reset-password`,
         data: {
           full_name: `${formData.firstName} ${formData.lastName}`,
           phone_number: `${formData.countryCode}${formData.phoneNumber}`,
-          date_of_birth: formData.dateOfBirth
-        }
-      }
+          date_of_birth: dobForSupabase,
+        },
+      },
     });
 
     if (error) {
       toast({
         title: "Signup Failed",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } else {
       toast({
         title: "Signup Successful",
-        description: "Check your email to verify your account."
+        description: "Check your email to verify your account.",
       });
       onBackToLogin();
     }
@@ -69,14 +98,13 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
     setIsLoading(false);
   };
 
-  // ✅ Password validation helpers
   const password = formData.password;
   const criteria = {
     length: password.length >= 8,
     upper: /[A-Z]/.test(password),
     lower: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
-    special: /[!@#$%^&*]/.test(password)
+    special: /[!@#$%^&*]/.test(password),
   };
 
   return (
@@ -109,31 +137,45 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               onChange={(e) => handleInputChange("email", e.target.value)}
               required
             />
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <select
-                className="border px-2 py-2 rounded-md bg-background"
+                className="w-1/3 border px-2 py-2 rounded-md bg-background"
                 value={formData.countryCode}
-                onChange={(e) => handleInputChange("countryCode", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("countryCode", e.target.value)
+                }
               >
-                <option value="+91">🇮🇳 +91</option>
-                <option value="+1">🇺🇸 +1</option>
-                <option value="+44">🇬🇧 +44</option>
+                {countries.map((country) => (
+                  <option key={country.code} value={`+${country.phone}`}>
+                    {country.name} (+{country.phone})
+                  </option>
+                ))}
               </select>
               <Input
+                className="w-2/3"
                 type="tel"
                 placeholder="Phone Number"
                 value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("phoneNumber", e.target.value)
+                }
               />
             </div>
+
             <Input
-              type="date"
-              placeholder="Date of Birth"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+              type="text"
+              placeholder="Enter your date of birth"
+              value={dob}
+              onChange={handleDobChange}
+              onFocus={(e) => {
+                e.target.placeholder = "DD/MM/YYYY";
+              }}
+              onBlur={(e) => {
+                e.target.placeholder = "Enter your date of birth";
+              }}
+              maxLength={10}
             />
 
-            {/* ✅ Password Field */}
             <Input
               type="password"
               placeholder="Password"
@@ -141,33 +183,41 @@ const SignupPage = ({ onBackToLogin }: SignupPageProps) => {
               onChange={(e) => handleInputChange("password", e.target.value)}
               required
             />
-
-            {/* ✅ Password Criteria */}
             {formData.password && (
               <div className="text-xs text-muted-foreground space-y-1">
                 <p className="font-medium">Password Requirements:</p>
                 <ul className="space-y-1">
-                  <li className={criteria.length ? "text-green-600" : "text-muted-foreground"}>• At least 8 characters</li>
-                  <li className={criteria.upper ? "text-green-600" : "text-muted-foreground"}>• One uppercase letter</li>
-                  <li className={criteria.lower ? "text-green-600" : "text-muted-foreground"}>• One lowercase letter</li>
-                  <li className={criteria.number ? "text-green-600" : "text-muted-foreground"}>• One number</li>
-                  <li className={criteria.special ? "text-green-600" : "text-muted-foreground"}>• One special character (!@#$%^&*)</li>
+                  <li className={criteria.length ? "text-green-600" : ""}>
+                    • At least 8 characters
+                  </li>
+                  <li className={criteria.upper ? "text-green-600" : ""}>
+                    • One uppercase letter
+                  </li>
+                  <li className={criteria.lower ? "text-green-600" : ""}>
+                    • One lowercase letter
+                  </li>
+                  <li className={criteria.number ? "text-green-600" : ""}>
+                    • One number
+                  </li>
+                  <li className={criteria.special ? "text-green-600" : ""}>
+                    • One special character (!@#$%^&*)
+                  </li>
                 </ul>
               </div>
             )}
-
             <Input
               type="password"
               placeholder="Confirm Password"
               value={formData.confirmPassword}
-              onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("confirmPassword", e.target.value)
+              }
               required
             />
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
-
           <div className="text-center pt-4">
             <button
               onClick={onBackToLogin}
