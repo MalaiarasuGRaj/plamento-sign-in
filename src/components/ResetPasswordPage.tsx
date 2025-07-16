@@ -1,187 +1,169 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Lock, CheckCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Lock, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const ResetPasswordPage = () => {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // ✅ Convert hash to query params (Fix Supabase recovery link)
+  // Establish session on password reset
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith("#")) {
-      const hashParams = new URLSearchParams(hash.substring(1));
-      const url = new URL(window.location.href);
-      hashParams.forEach((value, key) => url.searchParams.set(key, value));
-      window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+    const access_token = searchParams.get("access_token");
+    const refresh_token = searchParams.get("refresh_token");
+    const type = searchParams.get("type");
 
-      // Optional: redirect to /reset-password route if not already
-      if (!window.location.pathname.includes("/reset-password")) {
-        window.location.pathname = "/reset-password";
-      }
+    if (access_token && refresh_token && type === "recovery") {
+      supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+        if (error) {
+          toast({
+            title: "Session Error",
+            description: "Reset link is invalid or expired.",
+            variant: "destructive",
+          });
+          navigate("/");
+        }
+      });
     }
-  }, []);
+  }, [searchParams, toast, navigate]);
 
-  const validatePassword = (password: string) => {
-    const errors = [];
-    if (password.length < 8) errors.push("Minimum 8 characters");
-    if (!/[A-Z]/.test(password)) errors.push("One uppercase letter");
-    if (!/[a-z]/.test(password)) errors.push("One lowercase letter");
-    if (!/[0-9]/.test(password)) errors.push("One number");
-    if (!/[!@#$%^&*]/.test(password)) errors.push("One special character");
-    return errors;
+  const validatePassword = (pwd: string) => {
+    const issues = [];
+    if (pwd.length < 8) issues.push("At least 8 characters");
+    if (!/[A-Z]/.test(pwd)) issues.push("One uppercase letter");
+    if (!/[a-z]/.test(pwd)) issues.push("One lowercase letter");
+    if (!/[0-9]/.test(pwd)) issues.push("One number");
+    if (!/[!@#$%^&*]/.test(pwd)) issues.push("One special character");
+    return issues;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const passwordErrors = validatePassword(newPassword);
-    if (passwordErrors.length > 0) {
+  const handleReset = async () => {
+    if (password !== confirm) {
       toast({
-        title: "Invalid Password",
-        description: passwordErrors.join(" • "),
+        title: "Mismatch",
+        description: "Passwords do not match.",
         variant: "destructive",
       });
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    const errors = validatePassword(password);
+    if (errors.length > 0) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: "Weak Password",
+        description: errors.join(" • "),
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
 
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setIsSuccess(true);
-        toast({
-          title: "Success!",
-          description: "Password updated. Redirecting...",
-        });
-
-        await supabase.auth.signOut();
-        setTimeout(() => navigate("/"), 3000);
-      }
-    } catch (error) {
+    if (error) {
       toast({
         title: "Error",
-        description: "Unexpected error occurred",
+        description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({
+        title: "Success",
+        description: "Password updated successfully. Please log in.",
+      });
+      await supabase.auth.signOut();
+      navigate("/");
     }
+
+    setIsLoading(false);
   };
 
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CheckCircle className="mx-auto w-12 h-12 text-green-600" />
-            <h1 className="text-2xl font-semibold mt-2">Password Updated!</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              You’ll be redirected to login shortly.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/")} className="w-full">
-              Go to Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Lock className="mx-auto w-10 h-10 text-primary" />
-          <h1 className="text-2xl font-semibold mt-2">Reset Your Password</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter a new password below.
-          </p>
-        </CardHeader>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-zinc-900 p-8 rounded-lg shadow-md space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <Lock className="w-10 h-10 text-blue-500" />
+          </div>
+          <h1 className="text-2xl font-bold">Reset Your Password</h1>
+          <p className="text-sm text-zinc-400">Enter a new password below.</p>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">New Password</label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+        {/* Form */}
+        <div className="space-y-4">
+          {/* New Password */}
+          <div>
+            <label className="text-sm mb-1 block">New Password</label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10 bg-zinc-800 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
+          </div>
 
-            <div>
-              <label className="text-sm font-medium">Confirm Password</label>
-              <div className="relative">
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+          {/* Confirm Password */}
+          <div>
+            <label className="text-sm mb-1 block">Confirm Password</label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm new password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="pr-10 bg-zinc-800 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+              >
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              variant="login"
-              disabled={isLoading}
-            >
-              {isLoading ? "Updating..." : "Update Password"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          {/* Password Criteria */}
+          {password && (
+            <div className="text-xs text-zinc-400 space-y-1">
+              <p className="font-medium">Password must include:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li className={password.length >= 8 ? "text-green-400" : ""}>At least 8 characters</li>
+                <li className={/[A-Z]/.test(password) ? "text-green-400" : ""}>One uppercase letter</li>
+                <li className={/[a-z]/.test(password) ? "text-green-400" : ""}>One lowercase letter</li>
+                <li className={/[0-9]/.test(password) ? "text-green-400" : ""}>One number</li>
+                <li className={/[!@#$%^&*]/.test(password) ? "text-green-400" : ""}>One special character</li>
+              </ul>
+            </div>
+          )}
+
+          {/* Button */}
+          <Button onClick={handleReset} className="w-full" disabled={isLoading}>
+            {isLoading ? "Resetting..." : "Update Password"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

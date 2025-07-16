@@ -40,8 +40,8 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "https://8080-firebase-plamento-1752483210125.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev/reset-password"
-      }); // ✅ Use your correct redirect
+        redirectTo: "https://preview--plamento-sign-in-wizard.lovable.app/reset-password"
+      });
 
       if (error) {
         toast({
@@ -88,7 +88,6 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-card-foreground">
@@ -143,28 +142,6 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
                   </button>
                 </div>
               </div>
-              {password && (
-                <div className="text-xs text-muted-foreground space-y-1 mt-2">
-                  <p className="font-medium">Password Requirements:</p>
-                  <ul className="space-y-1">
-                    <li className={password.length >= 8 ? "text-green-600" : "text-muted-foreground"}>
-                      • At least 8 characters
-                    </li>
-                    <li className={/[A-Z]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
-                      • One uppercase letter
-                    </li>
-                    <li className={/[a-z]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
-                      • One lowercase letter
-                    </li>
-                    <li className={/[0-9]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
-                      • One number
-                    </li>
-                    <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-green-600" : "text-muted-foreground"}>
-                      • One special character
-                    </li>
-                  </ul>
-                </div>
-              )}
             </div>
 
             <Button
@@ -177,11 +154,10 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
             </Button>
           </form>
 
-          {/* Sign up link */}
           <div className="text-center pt-4">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <button 
+              <button
                 onClick={onSignup}
                 className="text-primary hover:text-primary/80 font-medium"
               >
@@ -192,7 +168,6 @@ const LoginPage = ({ onLogin, onSignup }: LoginPageProps) => {
         </CardContent>
       </Card>
 
-      {/* Footer */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>© 2025 Plamento</span>
