@@ -5,7 +5,6 @@ create table profiles (
   first_name text,
   last_name text,
   dob date,
-  phone_number text,
 
   constraint "first_name_length" check (char_length(first_name) >= 2),
   constraint "last_name_length" check (char_length(last_name) >= 2)
@@ -30,8 +29,8 @@ create policy "Users can update own profile." on profiles
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, first_name, last_name, dob, phone_number)
-  values (new.id, new.raw_user_meta_data->>'first_name', new.raw_user_meta_data->>'last_name', (new.raw_user_meta_data->>'dob')::date, new.raw_user_meta_data->>'phone_number');
+  insert into public.profiles (id, first_name, last_name, dob)
+  values (new.id, new.raw_user_meta_data->>'first_name', new.raw_user_meta_data->>'last_name', (new.raw_user_meta_data->>'dob')::date);
   return new;
 end;
 $$ language plpgsql security definer;
