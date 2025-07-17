@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Plamento',
@@ -14,6 +15,22 @@ function Header() {
         Plamento
       </h1>
     </header>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="absolute bottom-0 left-0 w-full p-4 md:p-6 text-center text-muted-foreground text-sm">
+      <div className="flex justify-center items-center space-x-4">
+        <span>© 2025 Plamento</span>
+        <span className="border-l h-4 border-muted-foreground/50"></span>
+        <Link href="#" className="hover:text-primary">Support</Link>
+        <span className="border-l h-4 border-muted-foreground/50"></span>
+        <Link href="#" className="hover:text-primary">Privacy</Link>
+        <span className="border-l h-4 border-muted-foreground/50"></span>
+        <Link href="#" className="hover:text-primary">Terms</Link>
+      </div>
+    </footer>
   );
 }
 
@@ -33,6 +50,7 @@ export default function RootLayout({
       <body className="font-body antialiased relative">
         <Header />
         {children}
+        <Footer />
         <Toaster />
       </body>
     </html>
