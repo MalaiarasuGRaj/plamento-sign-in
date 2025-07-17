@@ -23,12 +23,10 @@ export default function ForgotPasswordPage() {
           <Button className="w-full">Send Reset Link</Button>
         </CardContent>
         <CardContent className="mt-4 text-center">
-            <Button variant="ghost" asChild>
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Login
-              </Link>
-            </Button>
+          <Link href="/" className="inline-flex items-center text-sm font-medium text-primary/80 hover:text-primary underline-offset-4 hover:underline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Login
+          </Link>
         </CardContent>
       </Card>
     </div>
