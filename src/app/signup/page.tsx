@@ -225,8 +225,13 @@ export default function SignUpPage() {
                                         <CommandItem
                                           value={`${country.name} (${country.dialCode})`}
                                           key={country.code}
-                                          onSelect={() => {
-                                            form.setValue("countryCode", country.dialCode);
+                                          onSelect={(currentValue) => {
+                                            const selectedCountry = countries.find(
+                                              (c) => `${c.name} (${c.dialCode})`.toLowerCase() === currentValue
+                                            );
+                                            if (selectedCountry) {
+                                              form.setValue("countryCode", selectedCountry.dialCode);
+                                            }
                                             setPopoverOpen(false);
                                           }}
                                         >
