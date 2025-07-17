@@ -7,22 +7,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -33,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { countries } from "@/lib/countries";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters."),
@@ -41,7 +36,9 @@ const formSchema = z.object({
     required_error: "A date of birth is required.",
   }),
   email: z.string().email("Please enter a valid email address."),
-  countryCode: z.string(),
+  countryCode: z.string({
+    required_error: "Please select a country code.",
+  }),
   phoneNumber: z.string().min(5, "Please enter a valid phone number."),
   password: z.string().min(8, "Password must be at least 8 characters."),
   confirmPassword: z.string(),
@@ -54,6 +51,7 @@ export default function SignUpPage() {
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createSupabaseBrowserClient();
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -197,18 +195,55 @@ export default function SignUpPage() {
                       name="countryCode"
                       render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="w-[80px]">
-                                <SelectValue placeholder="+1" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="+1">+1</SelectItem>
-                              <SelectItem value="+44">+44</SelectItem>
-                              <SelectItem value="+91">+91</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-[90px] justify-between",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value
+                                    ? countries.find(
+                                        (country) => country.dialCode === field.value
+                                      )?.dialCode
+                                    : "+1"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[250px] p-0">
+                                <Command>
+                                  <CommandInput placeholder="Search country..." />
+                                  <CommandEmpty>No country found.</CommandEmpty>
+                                  <CommandGroup className="max-h-[200px] overflow-y-auto">
+                                    {countries.map((country) => (
+                                      <CommandItem
+                                        value={country.name}
+                                        key={country.code}
+                                        onSelect={() => {
+                                          form.setValue("countryCode", country.dialCode);
+                                          setPopoverOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            country.dialCode === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {country.name} ({country.dialCode})
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}
