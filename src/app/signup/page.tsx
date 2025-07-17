@@ -14,7 +14,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
@@ -75,7 +75,7 @@ export default function SignUpPage() {
           first_name: values.firstName,
           last_name: values.lastName,
           dob: values.dob.toISOString().split('T')[0], // format as YYYY-MM-DD
-          phone_number: `${values.countryCode} ${values.phoneNumber}`,
+          phone_number: `${values.countryCode}${values.phoneNumber}`,
         },
       },
     });
@@ -218,29 +218,31 @@ export default function SignUpPage() {
                             <PopoverContent className="w-[250px] p-0">
                                 <Command>
                                   <CommandInput placeholder="Search country..." />
-                                  <CommandEmpty>No country found.</CommandEmpty>
-                                  <CommandGroup className="max-h-[200px] overflow-y-auto">
-                                    {countries.map((country) => (
-                                      <CommandItem
-                                        value={country.name}
-                                        key={country.code}
-                                        onSelect={() => {
-                                          form.setValue("countryCode", country.dialCode);
-                                          setPopoverOpen(false);
-                                        }}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            country.dialCode === field.value
-                                              ? "opacity-100"
-                                              : "opacity-0"
-                                          )}
-                                        />
-                                        {country.name} ({country.dialCode})
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
+                                  <CommandList>
+                                    <CommandEmpty>No country found.</CommandEmpty>
+                                    <CommandGroup>
+                                      {countries.map((country) => (
+                                        <CommandItem
+                                          value={`${country.name} (${country.dialCode})`}
+                                          key={country.code}
+                                          onSelect={() => {
+                                            form.setValue("countryCode", country.dialCode);
+                                            setPopoverOpen(false);
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              country.dialCode === field.value
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                          {country.name} ({country.dialCode})
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
                                 </Command>
                             </PopoverContent>
                           </Popover>
