@@ -76,8 +76,6 @@ export default function SignUpPage() {
         description: error.message,
       });
     } else {
-      // Supabase sends a confirmation email.
-      // For this app, we'll redirect to dashboard as if auto-confirmed.
       router.push("/dashboard");
     }
   }
@@ -150,6 +148,9 @@ export default function SignUpPage() {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
+                          captionLayout="dropdown-buttons"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
