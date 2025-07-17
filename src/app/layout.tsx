@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 function Header() {
   return (
     <header className="absolute top-0 left-0 p-4 md:p-6">
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+      <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent text-transparent bg-clip-text">
         Plamento
       </h1>
     </header>
