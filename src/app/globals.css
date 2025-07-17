@@ -43,7 +43,7 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 240 65% 27%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
     --card: 240 45% 20%;
     --card-foreground: 0 0% 98%;
