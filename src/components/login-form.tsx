@@ -121,8 +121,9 @@ export function LoginForm() {
                   Forgot Password?
                 </Link>
             </div>
-            <Button type="submit" className="w-full font-semibold">
-              Login
+            <Button type="submit" className="w-full font-semibold" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
+              
             </Button>
           </form>
         </Form>

@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `https://9003-firebase-studio-1752742678411.cluster-zumahodzirciuujpqvsniawo3o.cloudworkstations.dev/reset-password`,
     });
 
     if (error) {

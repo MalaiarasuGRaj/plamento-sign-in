@@ -196,6 +196,9 @@ export default function SignUpPage() {
                 )}
               />
               <Button type="submit" className="w-full">Sign Up</Button>
+ <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+ {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
+</Button>
             </form>
           </Form>
         </CardContent>
