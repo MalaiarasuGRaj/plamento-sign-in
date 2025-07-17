@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4 pt-20">
       <Card className="w-full max-w-md animate-fade-in text-center">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Dashboard</CardTitle>
