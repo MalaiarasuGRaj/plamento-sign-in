@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, CalendarIcon } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -97,13 +97,13 @@ export default function SignUpPage() {
           </div>
           <Button className="w-full">Sign Up</Button>
         </CardContent>
-        <CardFooter className="justify-center">
-          <Button variant="ghost" asChild>
-            <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Login
+        <CardFooter className="flex-col text-sm">
+           <p className="text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/" className="font-medium text-primary/80 hover:text-primary underline-offset-4 hover:underline">
+              Sign In
             </Link>
-          </Button>
+          </p>
         </CardFooter>
       </Card>
     </div>
