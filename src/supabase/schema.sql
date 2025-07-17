@@ -7,7 +7,7 @@ create table profiles (
   dob date,
 
   constraint "first_name_length" check (char_length(first_name) >= 2),
-  constraint "last_name_length" check (char_length(last_name) >= 2)
+  constraint "last_name_length" check (char_length(last_name) >= 1)
 );
 
 -- Set up Row Level Security (RLS)
@@ -35,8 +35,6 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Drop the old trigger if it exists, then create the new one
-drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
