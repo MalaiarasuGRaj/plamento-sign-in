@@ -1,64 +1,41 @@
--- Create the profiles table to store public user data
-CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  first_name TEXT,
-  last_name TEXT,
-  date_of_birth DATE,
-  phone_country_code TEXT,
-  phone_number TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Create a table for public profiles
+create table profiles (
+  id uuid references auth.users not null primary key,
+  updated_at timestamp with time zone,
+  first_name text,
+  last_name text,
+  dob date,
+  phone_number text,
+
+  constraint "first_name_length" check (char_length(first_name) >= 2),
+  constraint "last_name_length" check (char_length(last_name) >= 2)
 );
 
--- Set up Row Level Security (RLS) for the profiles table
--- 1. Enable RLS on the table
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security
+alter table profiles
+  enable row level security;
 
--- 2. Create a policy that allows users to view their own profile
-CREATE POLICY "Users can view their own profile."
-ON public.profiles FOR SELECT
-USING (auth.uid() = id);
+create policy "Public profiles are viewable by everyone." on profiles
+  for select using (true);
 
--- 3. Create a policy that allows users to insert their own profile
-CREATE POLICY "Users can insert their own profile."
-ON public.profiles FOR INSERT
-WITH CHECK (auth.uid() = id);
+create policy "Users can insert their own profile." on profiles
+  for insert with check (auth.uid() = id);
 
--- 4. Create a policy that allows users to update their own profile
-CREATE POLICY "Users can update their own profile."
-ON public.profiles FOR UPDATE
-USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id);
+create policy "Users can update own profile." on profiles
+  for update using (auth.uid() = id);
 
--- This trigger automatically creates a profile entry when a new user signs up
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, first_name, last_name, phone_country_code, phone_number)
-  VALUES (
-    new.id,
-    new.raw_user_meta_data->>'first_name',
-    new.raw_user_meta_data->>'last_name',
-    new.raw_user_meta_data->>'phone_country_code',
-    new.raw_user_meta_data->>'phone_number'
-  );
+-- This trigger automatically creates a profile entry when a new user signs up.
+-- See https://supabase.com/docs/guides/auth/managing-user-data#using-triggers
+create function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, first_name, last_name, dob, phone_number)
+  values (new.id, new.raw_user_meta_data->>'first_name', new.raw_user_meta_data->>'last_name', (new.raw_user_meta_data->>'dob')::date, new.raw_user_meta_data->>'phone_number');
   return new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+end;
+$$ language plpgsql security definer;
 
--- This trigger executes the handle_new_user function after a new user is created in the auth.users table
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-
--- This trigger updates the updated_at column when a profile is updated
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_profile_update
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
