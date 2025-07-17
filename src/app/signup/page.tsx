@@ -6,15 +6,10 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { format } from "date-fns";
-import { CalendarIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
@@ -29,9 +24,15 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters."),
   lastName: z.string().min(2, "Last name must be at least 2 characters."),
-  dob: z.date({
-    required_error: "A date of birth is required.",
-  }),
+  dob: z.string().refine((val) => {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(val)) return false;
+    const [day, month, year] = val.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    const today = new Date();
+    const minDate = new Date("1900-01-01");
+    // Check if date is valid, not in the future, and after 1900
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day && date <= today && date >= minDate;
+  }, { message: "Please enter a valid date of birth in DD/MM/YYYY format." }),
   email: z.string().email("Please enter a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
   confirmPassword: z.string(),
@@ -50,13 +51,30 @@ export default function SignUpPage() {
     defaultValues: {
       firstName: "",
       lastName: "",
+      dob: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
+  
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldChange: (value: string) => void) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    fieldChange(value);
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const [day, month, year] = values.dob.split('/');
+    const formattedDob = `${year}-${month}-${day}`;
+
     const { error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -64,7 +82,7 @@ export default function SignUpPage() {
         data: {
           first_name: values.firstName,
           last_name: values.lastName,
-          dob: values.dob.toISOString().split('T')[0], // format as YYYY-MM-DD
+          dob: formattedDob,
         },
       },
     });
@@ -124,42 +142,16 @@ export default function SignUpPage() {
                 control={form.control}
                 name="dob"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem>
                     <FormLabel>Date of Birth</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          captionLayout="dropdown-buttons"
-                          fromYear={1900}
-                          toYear={new Date().getFullYear()}
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input 
+                        placeholder="DD/MM/YYYY" 
+                        {...field}
+                        onChange={(e) => handleDateChange(e, field.onChange)}
+                        maxLength={10}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
