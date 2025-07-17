@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 pt-20">
+    <div className="flex min-h-screen items-center justify-center p-4 pt-20 pb-20">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
